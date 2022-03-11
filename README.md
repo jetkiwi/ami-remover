@@ -7,9 +7,9 @@
 ```sh
 # Normal mode
 # 2020/08/29以前に作成されたAMI（引数で指定した文字列を含むAMI）を削除する
-$go run *.go {AMI NAME 1} {AMI NAME 2} -date=20200829
+$go run *.go -date=20200829 {AMI NAME 1} {AMI NAME 2}
 
 # Dry run mode
-$go run *.go {AMI NAME 1} {AMI NAME 2} -date=20200829 -dry_run
+$go run *.go -date=20200829 -dry_run {AMI NAME 1} {AMI NAME 2}
 
 ```

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -11,11 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/smithy-go"
 )
 
 func main() {
 
-	specified_date := flag.String("date", "", "YYYY-MM-DD. Deletes AMIs older than the specified date")
+	specified_date := flag.String("date", "", "YYYYMMDD. Deletes AMIs older than the specified date")
 	isDryRun := flag.Bool("dry_run", false, "")
 
 	flag.Parse()
@@ -47,7 +49,7 @@ func main() {
 
 	sd, err := time.Parse("20060102", *specified_date)
 	if err != nil {
-		log.Println("err: failed to parse specified date. Please specify in this format 'YYYY-MM-DD' ")
+		log.Println("err: failed to parse specified date. Please specify in this format 'YYYYMMDD' ")
 		fmt.Println(err)
 		return
 	}
@@ -70,9 +72,14 @@ func main() {
 
 			_, err = client.DeregisterImage(context.TODO(), &delInput)
 			if err != nil {
-				log.Println("err: failed to deregister ami")
-				fmt.Println(err)
-				return
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) && apiErr.ErrorCode() == "DryRunOperation" {
+					fmt.Println("Info: Dry run successful")
+				} else {
+					log.Println("err: failed to deregister ami")
+					fmt.Println(err)
+					return
+				}
 			}
 		}
 	}
